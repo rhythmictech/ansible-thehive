@@ -1,0 +1,57 @@
+---
+
+- name: copy thehive rpm gpg keys
+  copy: src=etc.pki.rpm-gpg.GPG-TheHive-Project dest=/etc/pki/rpm-gpg/GPG-TheHive-Project owner=root group=root mode=0644
+  when: thehive_install_repo
+  tags: ['thehive']
+
+- name: install thehive rpm gpg keys
+  rpm_key: state=present key=/etc/pki/rpm-gpg/GPG-TheHive-Project
+  when: thehive_install_repo
+  tags: ['thehive']
+
+- name: install thehive yum repo
+  copy: src=etc.yum.repos.d.thehive-rpm.repo dest=/etc/yum.repos.d/thehive-rpm.repo owner=root group=root mode=0644
+  when: thehive_install_repo
+  tags: ['thehive']
+
+- name: Install TheHive and related dependencies
+  package: name="{{ thehive_packages }}" state="present"
+  tags: ['thehive']
+
+- name: Place thehive seed data
+  template:
+    src: '{{ item }}.j2'
+    dest: '/etc/thehive/{{ item }}'
+    owner: root
+    mode: 0400
+  when: thehive_load_seed_data
+  with_items:
+    - thehive_data.json
+    - thehive_mappings.json
+  tags: ['thehive']
+
+- name: Load thehive mapping
+  command: "curl -s -H 'Content-Type: application/json' -XPUT http://localhost:9200/{{ thehive_index }} --data-binary @/etc/thehive/thehive_mappings.json"
+  when: thehive_load_seed_data
+  tags: ['thehive']
+
+- name: Load thehive seed data
+  command: "curl -s -H 'Content-Type: application/json' -XPOST http://localhost:9200/_bulk --data-binary @/etc/thehive/thehive_data.json"
+  when: thehive_load_seed_data
+  tags: ['thehive']
+
+- name: Copy in thehive config
+  template:
+    src: "application.conf.j2"
+    dest: "/etc/thehive/application.conf"
+  notify: restart thehive
+  tags: ['thehive']
+
+- name: enable and start thehive
+  service: name=thehive state=started enabled=true
+  notify: reload systemd
+  tags: ['thehive']
+
+- include: nginx.yml
+  when: thehive_install_nginx or thehive_configure_nginx

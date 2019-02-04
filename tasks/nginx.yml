@@ -1,0 +1,49 @@
+---
+
+- name: install nginx
+  package: name="{{ thehive_nginx_packages }}" state=present
+  when: thehive_install_nginx
+  tags: ['thehive']
+
+- name: Set httpd_can_network_connect flag on and keep it persistent across reboots
+  seboolean:
+    name: httpd_can_network_connect
+    state: yes
+    persistent: yes
+  when: thehive_install_nginx
+  tags: ['thehive']
+
+- name: ensure thehive cert is in place
+  copy: content="{{ thehive_nginx_ssl['certificate'] }}" dest="/etc/pki/tls/certs/thehive.crt" mode=0640 owner=root group=root
+  notify: reload nginx
+  when: thehive_configure_nginx and thehive_nginx_ssl['enabled']
+  tags: ['thehive']
+
+- name: ensure thehive ca bundle is in place
+  copy: content="{{ thehive_nginx_ssl['cabundle'] }}" dest="/etc/pki/tls/certs/thehive-cabundle.crt" mode=0640 owner=root group=root
+  when: thehive_configure_nginx and thehive_nginx_ssl['enabled'] and cabundle in thehive_nginx_ssl
+  notify: reload nginx
+  tags: ['thehive']
+
+- name: ensure thehive key is in place
+  copy: content="{{ thehive_nginx_ssl['key'] }}" dest="/etc/pki/tls/private/thehive.key" mode=0640 owner=root group=root
+  when: thehive_configure_nginx and thehive_nginx_ssl['enabled']
+  notify: reload nginx
+  tags: ['thehive']
+
+- name: ensure thehive nginx config is in place
+  template:
+    src: etc.nginx.conf.d.thehive.conf.j2
+    dest: /etc/nginx/conf.d/thehive.conf
+    owner: root
+    group: root
+    mode: 0640
+  notify: reload nginx
+  when: thehive_configure_nginx
+  tags: ['thehive']
+
+- name: enable and start nginx
+  service: name=nginx state=started enabled=true
+  notify: reload systemd
+  when: thehive_install_nginx
+  tags: ['thehive']

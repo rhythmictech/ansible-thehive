@@ -1,0 +1,13 @@
+- name: restart thehive
+  service: name=thehive state=restarted
+  notify: wait for the service to come up
+
+- name: reload nginx
+  service: name=nginx state=restarted
+  when: thehive_configure_nginx
+
+- name: reload systemd
+  shell: systemctl daemon-reload
+
+- name: wait for the service to come up
+  wait_for: port={{ thehive_http_port }} timeout=30

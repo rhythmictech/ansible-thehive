@@ -1,0 +1,90 @@
+---
+# Whether or not the TheHive RPM repo should be installed.
+# This is generally what you want, unless you are using your own RPM repo.
+thehive_install_repo: true
+
+# TheHive version to lock and install
+thehive_version: 3.2.1
+
+# Note that the mappings and seed data are dependent on the schema version.
+# If you are installing a version of TheHive that uses a different index name,
+# the mappings and data files need to be updated.
+thehive_index: thehive_14
+
+# TheHive URL.
+thehive_url: localhost
+
+# Wheteher or not an nginx instance should be installed as a proxy
+thehive_install_nginx: true
+
+# Whether or not to configure nginx proxy
+thehive_configure_nginx: true
+
+# Referenced files will be included in each nginx server config
+thehive_nginx_includes: []
+
+# Optionally use SSL with Nginx
+thehive_nginx_ssl:
+  enabled: false
+  certificate: ""
+  key: ""
+  #cabundle: provide if using a bundle
+
+# The port TheHive will listen to. This var can be changed even when using
+# the nginx proxy.
+thehive_http_port: 9000
+
+# IP address TheHive should bind to. In general, this can be left as is. However,
+# this must be set to 127.0.0.1 when authenticating through a proxy
+thehive_http_addr: "0.0.0.0"
+
+# Mandatory. Generate a key like this:
+# cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1
+thehive_secret: ""
+
+# By default, TheHive requires manual steps to configure.
+# You can optionally load a pre-configured mapping and seed data, which makes
+# TheHive immediately usable out of the box.
+thehive_load_seed_data: true
+
+# Name of the initial user to create. Note if you are using vouch or LDAP for
+# authentication, you must set this to a valid username in your directory.
+# TheHive does not create users on first logon.
+thehive_seed_initial_username: "admin"
+
+# Optionally use Vouch authentication (e.g., for Google Authentication, Okta, etc)
+thehive_auth_vouch:
+  enabled: false
+  url: ""
+  logon_header: THEHIVE_USER
+
+# Optionally use LDAP authentication.
+thehive_auth_ldap:
+  enabled: false
+  servers: []
+  use_ssl: ""
+  bind_dn: ""
+  bind_pw: ""
+  search_base: ""
+  username_attribute: "cn"
+
+# ElasticSearch configuration. If using recommended ES configuration, this
+# does not need to be changed.
+thehive_es:
+  index: thehive
+  cluster: thehive
+  endpoint: 127.0.0.1:9300
+
+# Packages that will be installed with TheHive
+thehive_packages:
+  - java-1.8.0-openjdk
+  - python-pip
+  - unzip
+  - git
+  - thehive-{{ thehive_version }}
+
+# Packages that will be installed if the nginx proxy is used.
+# libsemanage-python is necessary for selinux.
+thehive_nginx_packages:
+  - nginx
+  - libsemanage-python

@@ -1,0 +1,13 @@
+galaxy_info:
+  author: Cris Daniluk
+  description: Ansible Role for TheHive, an excellent incident response tool.
+  company: Rhythmic Technologies, Inc.
+  license: MIT
+  min_ansible_version: 2.0
+  platforms:
+    - name: CentOS
+      versions:
+        - "7"
+  galaxy_tags:
+    - thehive
+dependencies: []
